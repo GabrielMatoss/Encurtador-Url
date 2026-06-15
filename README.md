@@ -101,7 +101,7 @@ POST /api/shorturls
 ### Clonar Repositório
 
 ```bash
-git clone https://github.com/SEU-USUARIO/url-shortener-api.git
+git clone https://github.com/GabrielMatoss/url-shortener-api.git
 ```
 
 ### Entrar na Pasta
