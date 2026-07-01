@@ -28,7 +28,11 @@ public class Program
             app.UseSwaggerUI();
         }
 
-        //app.UseHttpsRedirection();
+        app.UseHttpsRedirection();
+
+        app.UseDefaultFiles();
+
+        app.UseStaticFiles();
 
         app.UseAuthorization();
 

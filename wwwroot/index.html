@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encurtador de URL</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main class="container">
+        <section class="card">
+            <h1>🔗 Encurtador de URL</h1>
+            <p>Cole abaixo a URL que deseja encurtar.</p>
+
+            <input id="urlInput" type="url" placeholder="https://www.google.com">
+            <button id="shortenButton">
+                Encurtar URL
+            </button>
+            <div id="loading" class="hidden">
+                Encurtando...
+            </div>
+
+            <section id="result" class="hidden">
+                <h2>Sua URL encurtada</h2>
+                <input id="shortUrl" type="text" readonly>
+
+                <button id="copyButton">
+                    Copiar URL
+                </button>
+            </section>
+
+            <p id="error" class="error hidden"></p>
+        </section>
+    </main>
+    <script src="scripts.js"></script>
+</body>
+</html>

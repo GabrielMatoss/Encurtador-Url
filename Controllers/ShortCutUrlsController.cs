@@ -25,10 +25,22 @@ public class ShortCutUrlsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create(CreatedShortUrlRequest request)
     {
-        var shortCode = Guid
-            .NewGuid()
-            .ToString("N")
-            .Substring(0, 6);
+        if (!Uri.IsWellFormedUriString(request.Url, UriKind.Absolute))
+        {
+            return BadRequest("URL inválida.");
+        }
+
+        string shortCode;
+
+        do
+        {
+            shortCode = Guid
+                .NewGuid()
+                .ToString("N")
+                .Substring(0, 6);
+
+        } while (await _context.ShortUrls
+            .AnyAsync(x => x.ShortCode == shortCode));
 
         var shortUrl = new ShortUrl
         {
@@ -41,10 +53,17 @@ public class ShortCutUrlsController : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        var response = new CreatedShortUrlResponse
+        {
+            ShortCode = shortUrl.ShortCode,
+
+            ShortUrl = $"{Request.Scheme}://{Request.Host}/r/{shortUrl.ShortCode}"
+        };
+
         return CreatedAtAction(
             nameof(GetByCode),
             new { code = shortUrl.ShortCode },
-            shortUrl
+            response
         );
     }
 
@@ -57,7 +76,13 @@ public class ShortCutUrlsController : ControllerBase
     {
         var urls = await _context.ShortUrls.ToListAsync();
 
-        return Ok(urls);
+        var response = await _context.ShortUrls .Select(x => new ResponseShortUrl{
+            OriginalUrl = x.OriginalUrl,
+            ShortCode = x.ShortCode,
+            CreatedAt = x.CreatedAt
+        }).ToListAsync();
+
+        return Ok(response);
     }
 
     /// <summary>
@@ -72,9 +97,21 @@ public class ShortCutUrlsController : ControllerBase
             .FirstOrDefaultAsync(e => e.ShortCode == code);
 
         if (url == null)
-            return NotFound();
+        {
+            return NotFound(new
+            {
+                Message = $"Código '{code}' não encontrado."
+            });
+        }
 
-        return Ok(url);
+        var response = new ResponseShortUrl
+        {
+            OriginalUrl = url.OriginalUrl,
+            ShortCode = url.ShortCode,
+            CreatedAt = url.CreatedAt
+        };
+
+        return Ok(response);
     }
 
     /// <summary>
@@ -87,12 +124,20 @@ public class ShortCutUrlsController : ControllerBase
         string code,
         UpdatedShortUrlRequest request)
     {
+        if (!Uri.IsWellFormedUriString(request.Url, UriKind.Absolute))
+        {
+            return BadRequest("URL inválida.");
+        }
+
         var url = await _context.ShortUrls
             .FirstOrDefaultAsync(x => x.ShortCode == code);
 
         if (url == null)
         {
-            return NotFound();
+            return NotFound(new
+            {
+                Message = $"Código '{code}' não encontrado."
+            });
         }
 
         url.OriginalUrl = request.Url;
@@ -115,7 +160,10 @@ public class ShortCutUrlsController : ControllerBase
 
         if (url == null)
         {
-            return NotFound();
+            return NotFound(new
+            {
+                Message = $"Código '{code}' não encontrado."
+            });
         }
 
         _context.ShortUrls.Remove(url);
@@ -138,8 +186,15 @@ public class ShortCutUrlsController : ControllerBase
 
         if (url == null)
         {
-            return NotFound();
+            return NotFound(new
+            {
+                Message = $"Código '{code}' não encontrado."
+            });
         }
+
+        url.ClickCount++;
+
+        await _context.SaveChangesAsync();
 
         return Redirect(url.OriginalUrl);
     }
